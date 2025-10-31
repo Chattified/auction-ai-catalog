@@ -36,7 +36,7 @@ if os.path.exists(CSV_FILE):
         lot_counter = df_existing["Lot Number"].max() + 1
 
 # ---------------- GENERATE CATALOG ----------------
-@app.get("/generate-catalog")
+@app.post("/generate-catalog")
 def generate_catalog():
     """
     Generate auction descriptions for each lot based on images in /uploads/ folder.
