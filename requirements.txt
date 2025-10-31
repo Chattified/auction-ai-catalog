@@ -4,3 +4,10 @@ python-multipart
 openai
 Jinja2
 aiofiles
+pandas
+Pillow
+pydantic
+httpx
+requests
+typing-extentions
+python-dotenv
