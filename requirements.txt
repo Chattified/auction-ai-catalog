@@ -2,8 +2,7 @@ fastapi
 uvicorn[standard]
 pandas
 python-multipart
--f https://download.pytorch.org/whl/torch_stable.html
-torch==2.2.2+cpu
+torch
 transformers
 Pillow
 openai
