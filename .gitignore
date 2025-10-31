@@ -1,11 +1,21 @@
 # Ignore Python virtual environment
 venv/
 __pycache__/
+.pytest_cache/
 *.pyc
 *.pyo
 *.pyd
 *.sqlite3
+*.log
+
+#ignore large model/data folders
+models/
+uploads/
+data/
+cache/
+torch_cache/
 
 # Ignore other unwanted files
+*.db
 .DS_Store
 .env
