@@ -9,5 +9,5 @@ Pillow
 pydantic
 httpx
 requests
-typing-extentions
+typing-extensions
 python-dotenv
