@@ -1,6 +1,8 @@
 fastapi
 uvicorn[standard]
+pandas
 python-multipart
+torch
+transformers
+Pillow
 openai
-Jinja2
-aiofiles
