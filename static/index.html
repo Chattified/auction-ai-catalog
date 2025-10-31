@@ -66,7 +66,7 @@
         formData.append("file", file);
 
         try {
-          const response = await fetch("/describe/", { method: "POST", body: formData });
+          const response = await fetch("/generate-catalog", { method: "POST", body: formData });
           const data = await response.json();
 
           itemDiv.innerHTML = `
