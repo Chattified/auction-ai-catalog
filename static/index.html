@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Auction Catalog Generator</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f8f9fb; color: #333; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 40px; }
+    h1 { color: #2b2b52; }
+    .upload-box { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; width: 500px; }
+    input[type=file] { margin: 20px 0; }
+    button { background-color: #2b2b52; color: white; border: none; padding: 10px 20px; font-size: 1rem; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #46468f; }
+    img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
+    .result { margin-top: 30px; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); width: 500px; text-align: left; }
+    .loading { font-style: italic; color: gray; }
+    hr { border: none; border-top: 1px solid #ddd; margin: 10px 0; }
+    #lot-number { font-size: 1.2em; color: #2b2b52; font-weight: bold; }
+    .download-link { text-decoration: none; display: inline-block; margin-top: 15px; }
+    .result-item { margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>🖼️ AI Auction Catalog Generator</h1>
+
+  <div class="upload-box">
+    <form id="uploadForm">
+      <input type="file" id="fileInput" accept="image/*" multiple required />
+      <br />
+      <button type="submit">Generate Description</button>
+    </form>
+  </div>
+
+  <div class="result" id="result" hidden></div>
+
+  <a href="/download-csv" download class="download-link">
+    <button>⬇️ Download Full CSV</button>
+  </a>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const fileInput = document.getElementById("fileInput");
+    const resultBox = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const files = fileInput.files;
+      if (!files.length) return alert("Please select at least one image!");
+
+      resultBox.hidden = false;
+      resultBox.innerHTML = ""; // Clear previous results
+
+      for (const file of files) {
+        // Show preview
+        const previewImg = document.createElement("img");
+        previewImg.src = URL.createObjectURL(file);
+        resultBox.appendChild(previewImg);
+
+        // Placeholder container
+        const itemDiv = document.createElement("div");
+        itemDiv.classList.add("result-item");
+        itemDiv.innerHTML = `<p class="loading">⏳ Generating lot for ${file.name}...</p>`;
+        resultBox.appendChild(itemDiv);
+
+        // Send to backend
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch("/describe/", { method: "POST", body: formData });
+          const data = await response.json();
+
+          itemDiv.innerHTML = `
+            <p>🧾 Lot #${data.lot_number}</p>
+            <p><strong>Base Caption:</strong> ${data.base_caption}</p>
+            <p><strong>Refined Catalog Text:</strong> ${data.refined_catalog_text}</p>
+            <p><strong>Enhanced Description:</strong> ${data.final_enhanced_description}</p>
+          `;
+        } catch (error) {
+          itemDiv.innerHTML = `<p>❌ Error generating description for ${file.name}</p>`;
+          console.error(error);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
