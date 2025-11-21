@@ -1,6 +1,5 @@
 import os
-import shutil
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, UploadFile
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,9 +8,12 @@ from openai import OpenAI
 
 # --- Configuration ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOADS_FOLDER = os.path.join(BASE_DIR, "uploads")  # <-- Fixed for Render
+UPLOADS_FOLDER = os.path.join(BASE_DIR, "uploads")  # Writable folder on Render
 CSV_FILE = os.path.join(UPLOADS_FOLDER, "catalog_output.csv")
-PUBLIC_BASE_URL = "https://auction-ai-catalog.onrender.com/uploads"
+
+# Make sure this matches your live Render app URL
+PUBLIC_BASE_URL = "https://your-render-app.onrender.com/uploads"
+
 client = OpenAI()
 
 app = FastAPI()
@@ -24,10 +26,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static site (index.html, etc.)
+# Serve static folders
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/uploads", StaticFiles(directory=UPLOADS_FOLDER), name="uploads")  # Public access
 
-# Make sure uploads folder exists
+# Ensure uploads folder exists
 os.makedirs(UPLOADS_FOLDER, exist_ok=True)
 
 # --- ROUTES ---
@@ -51,20 +54,21 @@ async def upload_files(files: list[UploadFile]):
 
 @app.post("/generate")
 async def generate_catalog():
-    images = [f for f in os.listdir(UPLOADS_FOLDER) if f.lower().endswith((".jpg", ".jpeg", ".png"))]
+    images = [
+        f for f in os.listdir(UPLOADS_FOLDER) 
+        if f.lower().endswith((".jpg", ".jpeg", ".png"))
+    ]
     if not images:
         return JSONResponse({"error": "No images found in uploads folder"}, status_code=400)
 
     data = []
     for idx, image_name in enumerate(images, start=1):
-        image_url = f"{PUBLIC_BASE_URL}/{image_name}"
+        image_url = f"{PUBLIC_BASE_URL}/{image_name}"  # Public URL for AI and thumbnails
         prompt = f"Create a short auction catalog title and description for this image: {image_url}"
         try:
             response = client.responses.create(
                 model="gpt-4.1-mini",
-                input=[
-                    {"role": "user", "content": prompt}
-                ]
+                input=[{"role": "user", "content": prompt}]
             )
             text = response.output[0].content[0].text
         except Exception as e:
@@ -73,7 +77,8 @@ async def generate_catalog():
         data.append({
             "Lot #": idx,
             "Image": image_name,
-            "Description": text
+            "Description": text,
+            "URL": image_url  # Save the public URL in the CSV for reference
         })
 
     df = pd.DataFrame(data)

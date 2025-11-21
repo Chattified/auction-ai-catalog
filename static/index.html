@@ -22,14 +22,19 @@
   <div id="status"></div>
 
   <script>
+    const PUBLIC_BASE_URL = "/uploads"; // Matches the FastAPI static mount
+
     async function uploadImages() {
       const files = document.getElementById('fileInput').files;
       if (!files.length) return alert('Please choose images first!');
+
       const formData = new FormData();
       for (const file of files) formData.append('files', file);
+
       document.getElementById('status').innerText = 'Uploading...';
       const res = await fetch('/upload', { method: 'POST', body: formData });
       const data = await res.json();
+
       document.getElementById('status').innerText = 'Upload complete!';
       showThumbnails(data.uploaded);
     }
@@ -39,7 +44,7 @@
       gallery.innerHTML = '';
       files.forEach(file => {
         const img = document.createElement('img');
-        img.src = '/uploads/' + file;
+        img.src = `${PUBLIC_BASE_URL}/${file}`; // Use public URL
         gallery.appendChild(img);
       });
     }
@@ -47,20 +52,30 @@
     async function generateCatalog() {
       document.getElementById('status').innerText = 'Generating catalog...';
       const res = await fetch('/generate', { method: 'POST' });
-      if (!res.ok) return alert('Error generating catalog!');
+
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.error || 'Error generating catalog!');
+        document.getElementById('status').innerText = '';
+        return;
+      }
+
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'catalog_output.csv';
       a.click();
+
       document.getElementById('status').innerText = 'Catalog generated and downloaded!';
     }
 
     async function deleteUploads() {
       if (!confirm('Delete all uploaded images?')) return;
+
       const res = await fetch('/delete-uploads', { method: 'DELETE' });
       const data = await res.json();
+
       document.getElementById('status').innerText = data.status;
       document.getElementById('gallery').innerHTML = '';
     }
