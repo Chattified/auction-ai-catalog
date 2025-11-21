@@ -26,12 +26,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Ensure uploads folder exists BEFORE mounting ---
+os.makedirs(UPLOADS_FOLDER, exist_ok=True)
+
 # Serve static folders
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_FOLDER), name="uploads")  # Public access
-
-# Ensure uploads folder exists
-os.makedirs(UPLOADS_FOLDER, exist_ok=True)
 
 # --- ROUTES ---
 
@@ -55,7 +55,7 @@ async def upload_files(files: list[UploadFile]):
 @app.post("/generate")
 async def generate_catalog():
     images = [
-        f for f in os.listdir(UPLOADS_FOLDER) 
+        f for f in os.listdir(UPLOADS_FOLDER)
         if f.lower().endswith((".jpg", ".jpeg", ".png"))
     ]
     if not images:
